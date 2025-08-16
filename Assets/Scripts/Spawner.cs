@@ -29,6 +29,12 @@ public class Spawner : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        GameManager.gameManager.gameOver.AddListener(EndGame);
+    }
+
+    void EndGame()
+    {
+        gameOver = true;
     }
 
     void Start()
@@ -37,12 +43,14 @@ public class Spawner : MonoBehaviour
     }
     public int secondsAfterWave;
     public int waveTime = 15;
+    public int betweenWavesTime = 15;
     public static bool waveActive = false;
     public int lastWave;
     IEnumerator SpawnLoop()
     {
+
         // Spawn obstacles during the wave time
-        while (true)
+        while (!gameOver)
         {
             Spawn();
             yield return new WaitForSeconds(spawnTime);
@@ -77,17 +85,19 @@ public class Spawner : MonoBehaviour
         GameObject collectible = Instantiate(collectibles);
         collectible.transform.SetPositionAndRotation(new(o.transform.position.x, collectiblesHeight, o.transform.position.z + collectiblesOffset), Quaternion.identity);
         collectible.transform.SetParent(o.transform, true);
-        //collectible.transform.localScale = obstacleScale;
+ 
     }
 
     public void StartWave()
     {
+        if (gameOver) { return; }
         Debug.Log("new wave");
         difficultyLevel = difficultyLevel + 1f;
         spawnTime -= spawnDecrease;
         spawnTime = Mathf.Clamp(spawnTime, minSpawnTime, maxSpawnTime);
         Tween.Delay(secondsAfterWave - 1f, () =>
         {
+            SoundManager.instance.PlayNextLevel();
             waveText.gameObject.SetActive(true);
         });
         if (difficultyLevel > lastWave)
@@ -98,24 +108,39 @@ public class Spawner : MonoBehaviour
         {
             waveText.SetText("Wave " + difficultyLevel + " Starting!");
         }
+
         
-        Tween.Delay(secondsAfterWave, () =>
+
+        Tween.Delay(secondsAfterWave + 1f, () =>
         {
+            
             waveText.gameObject.SetActive(false);
             spawnCoroutine = StartCoroutine(SpawnLoop());
             //StartCoroutine(SpawnLoop());
             waveActive = true;
+
+
+            if (difficultyLevel > lastWave)
+            {
+                return;
+            }
+            Tween.Delay(waveTime, () => {
+                waveActive = false;
+                if (spawnCoroutine != null)
+                {
+                    StopCoroutine(spawnCoroutine);
+                    Tween.Delay(betweenWavesTime, () =>
+                    {
+                        StartWave();
+                    });
+                    
+                }
+            });
         });
 
-        if (difficultyLevel > lastWave) { 
-            return; }
         
 
-        Tween.Delay(waveTime, () => {
-            waveActive = false;
-            if (spawnCoroutine != null)
-                StopCoroutine(spawnCoroutine);
-        });
+ 
 
     }
 

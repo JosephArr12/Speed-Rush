@@ -7,7 +7,8 @@ using PrimeTween;
 public class PlayerData
 {
     public int highScore;
-    public bool audio;
+    //if mute is false audio is on, if mute is true audio is off
+    public bool mute;
 }
 
     public class MenuManager : MonoBehaviour
@@ -40,10 +41,11 @@ public class PlayerData
 
     private void Start()
     {
+        
         loadedData = LoadAllData();
         highScore.SetText("High Score: " + loadedData.highScore.ToString());
-        source.mute = !loadedData.audio;
-        audioToggle.isOn = loadedData.audio;
+        audioToggle.isOn = !loadedData.mute;
+        source.mute = !audioToggle.isOn;
     }
     public void Controls()
     {
@@ -53,8 +55,8 @@ public class PlayerData
 
     public void Audio()
     {
-        source.mute = !source.mute;
-        loadedData.audio = source.mute;
+        source.mute = !audioToggle.isOn;
+        loadedData.mute = source.mute;
         SaveDataToPrefs();
     }
 

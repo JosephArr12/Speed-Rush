@@ -77,6 +77,7 @@ public class Player : MonoBehaviour
         inputActions.Player.Move.canceled += ctx => moveInput = Vector2.zero;
         inputActions.Player.Jump.performed += ctx => Jump();
         inputActions.Player.Slide.performed += ctx => Slide();
+        inputActions.Player.Pause.performed += ctx => GameManager.gameManager.Pause();
     }
 
     private void OnDisable()

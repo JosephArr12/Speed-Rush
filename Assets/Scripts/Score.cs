@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using PrimeTween;
 using UnityEngine.Events;
 public class Score : MonoBehaviour
 {
@@ -13,21 +14,14 @@ public class Score : MonoBehaviour
     int combinedScore;
     public int increaseDifficultyAmount;
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI scoreToBeatText;
     public TextMeshProUGUI coinsCollectedText;
     public TextMeshProUGUI finalScoreText;
+    public  AudioSource[] allAudioSources;
     bool gameOver;
-
+    bool beatHighScore;
     PlayerData loadedData;
     public UnityEvent coinCollected;
-    public void SetAudio(bool audio)
-    {
-        loadedData.audio = audio;
-        SaveDataToPrefs();
-    }
-    public bool GetAudio()
-    {
-        return loadedData.audio;
-    }
 
     public void SaveDataToPrefs()
     {
@@ -45,8 +39,26 @@ public class Score : MonoBehaviour
 
     private void Start()
     {
-        
+        // Find all active AudioSource components in the scene and store them in the array
+        allAudioSources = FindObjectsOfType<AudioSource>();
+
+        // You can now iterate through the array and perform operations on each AudioSource
+        foreach (AudioSource audioSource in allAudioSources)
+        {
+            audioSource.mute = loadedData.mute;
+        }
+
         Player.startGame.AddListener(StartGame);
+
+        if (loadedData.highScore <= 0)
+        {
+            scoreToBeatText.gameObject.SetActive(false);
+        }
+        else
+        {
+            scoreToBeatText.gameObject.SetActive(true);
+            scoreToBeatText.SetText("Score to beat : " + loadedData.highScore.ToString());
+        }
     }
 
     PlayerData LoadAllData()
@@ -75,6 +87,18 @@ public class Score : MonoBehaviour
         }
         combinedScore = score + coinScore;
         scoreText.SetText(combinedScore.ToString());
+        CheckAgainstHighScore();
+    }
+
+    void CheckAgainstHighScore()
+    {
+        if(combinedScore > loadedData.highScore && !beatHighScore)
+        {
+            scoreToBeatText.gameObject.SetActive(false);
+            beatHighScore = true;
+            Tween.PunchScale(scoreToBeatText.transform, Vector3.one * 3f, 1f, 10);
+
+        }
     }
 
 
@@ -86,14 +110,18 @@ public class Score : MonoBehaviour
         combinedScore = score + coinScore;
         scoreText.SetText(combinedScore.ToString());
         coinCollected?.Invoke();
+        CheckAgainstHighScore();
     }
 
     public void SetFinalStats()
     {
         gameOver = true;
-        coinsCollectedText.SetText("Coins Collected:" + coinsCollected.ToString());
-        finalScoreText.SetText("Final Score:" + combinedScore.ToString());
-        loadedData.highScore = combinedScore;
+        coinsCollectedText.SetText("Coins Collected : " + coinsCollected.ToString());
+        finalScoreText.SetText("Final Score : " + combinedScore.ToString());
+        if(combinedScore > loadedData.highScore)
+        {
+            loadedData.highScore = combinedScore;
+        }
         SaveDataToPrefs();
     }
 }

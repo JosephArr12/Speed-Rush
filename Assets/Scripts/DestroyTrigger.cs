@@ -6,7 +6,7 @@ public class DestroyTrigger : MonoBehaviour {
     {
         if (other.GetComponent<Mover>()){
             Destroy(other.gameObject);
-            Tween.Delay(0.5f, () => { CheckObstacles(); });
+            //Tween.Delay(0.5f, () => { CheckObstacles(); });
         }        
     }
 
